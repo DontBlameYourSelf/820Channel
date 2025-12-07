@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>820Channel | OSINT Framework by dreadfulsins</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: #0a0a0a;
+            --terminal-green: #00ff41;
+            --terminal-dim: #008F11;
+            --text-main: #e0e0e0;
+            --text-muted: #888;
+            --border: #1a1a1a;
+            --glitch-red: #ff00ff;
+            --glitch-blue: #00ffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            font-family: 'Courier New', Courier, monospace; /* Hacker font */
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* CRT Scanline Effect Overlay */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 999;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* HEADER */
+        header {
+            background: #000;
+            padding: 2rem 1rem;
+            text-align: center;
+            border-bottom: 2px solid var(--terminal-dim);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+        }
+
+        /* GLITCH EFFECT CSS */
+        .glitch-wrapper {
+            display: inline-block;
+            position: relative;
+        }
+
+        .glitch {
+            font-size: 3rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            position: relative;
+            color: var(--terminal-green);
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.7);
+        }
+
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+        }
+
+        .glitch::before {
+            left: 2px;
+            text-shadow: -2px 0 var(--glitch-red);
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+
+        .glitch::after {
+            left: -2px;
+            text-shadow: -2px 0 var(--glitch-blue);
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim 2.5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(14px, 9999px, 127px, 0); }
+            20% { clip: rect(96px, 9999px, 16px, 0); }
+            40% { clip: rect(69px, 9999px, 137px, 0); }
+            60% { clip: rect(10px, 9999px, 35px, 0); }
+            80% { clip: rect(138px, 9999px, 49px, 0); }
+            100% { clip: rect(23px, 9999px, 88px, 0); }
+        }
+
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(129px, 9999px, 36px, 0); }
+            20% { clip: rect(32px, 9999px, 4px, 0); }
+            40% { clip: rect(78px, 9999px, 92px, 0); }
+            60% { clip: rect(120px, 9999px, 136px, 0); }
+            80% { clip: rect(2px, 9999px, 60px, 0); }
+            100% { clip: rect(85px, 9999px, 135px, 0); }
+        }
+
+        .stats {
+            margin-top: 10px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .creator-link {
+            color: var(--terminal-green);
+            text-decoration: none;
+            background: rgba(0, 255, 65, 0.1);
+            padding: 2px 6px;
+            border: 1px solid var(--terminal-dim);
+            transition: 0.3s;
+        }
+        .creator-link:hover {
+            background: var(--terminal-green);
+            color: #000;
+            box-shadow: 0 0 15px var(--terminal-green);
+        }
+
+        /* CONTROLS */
+        .controls {
+            max-width: 1200px;
+            margin: 20px auto 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        input, select {
+            padding: 12px;
+            background: #000;
+            border: 1px solid var(--terminal-dim);
+            color: var(--terminal-green);
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            outline: none;
+            min-width: 300px;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--terminal-green);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        /* GRID */
+        .container {
+            max-width: 1600px;
+            margin: 30px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        /* CARD DESIGN */
+        .card {
+            background: #080808;
+            border: 1px solid #333;
+            padding: 20px;
+            position: relative;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--terminal-dim);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: 0.4s;
+        }
+
+        .card:hover {
+            border-color: var(--terminal-green);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.15);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+            background: var(--terminal-green);
+        }
+
+        .card-cat {
+            color: #555;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            border: 1px solid #333;
+            padding: 2px 6px;
+            display: inline-block;
+            margin-bottom: 10px;
+            width: fit-content;
+        }
+
+        .card h3 {
+            color: var(--text-main);
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: #888;
+            font-size: 0.85rem;
+            flex-grow: 1;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background: transparent;
+            color: var(--terminal-green);
+            border: 1px solid var(--terminal-dim);
+            padding: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            background: var(--terminal-green);
+            color: #000;
+            box-shadow: 0 0 10px var(--terminal-green);
+        }
+
+        .count-glitch {
+            color: var(--terminal-green);
+            font-weight: bold;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: #444;
+            font-size: 0.8rem;
+            border-top: 1px solid #222;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="glitch-wrapper">
+        <div class="glitch" data-text="820Channel">820Channel</div>
+    </div>
+    
+    <div class="stats">
+        SYSTEM_STATUS: <span id="toolCount" class="count-glitch">LOADING...</span> MODULES ONLINE
+        <br>
+        <br>
+        [ СОЗДАТЕЛЬ: <a href="https://t.me/eucerinn" target="_blank" class="creator-link">@eucerinn</a> ]
+    </div>
+    
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="> INPUT_SEARCH_QUERY...">
+        <select id="categorySelect">
+            <option value="All">> SELECT_TARGET_CATEGORY</option>
+        </select>
+    </div>
+</header>
+
+<div class="container" id="toolsGrid"></div>
+
+<footer>
+    <p>// WARNING: AUTHORIZED USE ONLY. DO NOT USE FOR ILLEGAL ACTIVITIES.</p>
+    <p>SYSTEM_ID: DREADFULSINS_NODE_820</p>
+</footer>
+
+<script>
+    // --- DATABASE: 850+ TOOLS ---
+    const rawData = [
+        // --- PARTS 1-8 MERGED ---
+        ["Sherlock", "https://github.com/sherlock-project/sherlock", "Username", "Поиск аккаунтов в 300+ социальных сетях по никнейму."],
+        ["Maigret", "https://github.com/soxoj/maigret", "Username", "Мощный инструмент для сбора досье на человека по username."],
+        ["WhatsMyName", "https://whatsmyname.app/", "Username", "Быстрая проверка использования никнейма на сотнях сайтов."],
+        ["Namechk", "https://namechk.com/", "Username", "Проверка доступности никнейма и домена."],
+        ["Instant Username", "https://instantusername.com/", "Username", "Мгновенный поиск по огромной базе сайтов."],
+        ["Blackbird", "https://github.com/p1ngul1n0/blackbird", "Username", "Быстрый OSINT инструмент для поиска аккаунтов."],
+        ["Have I Been Pwned", "https://haveibeenpwned.com/", "Email", "Проверка почты на утечки паролей."],
+        ["Epios", "https://epios.com/", "Email", "Поиск профилей Google и отзывов по Email без уведомления жертвы."],
+        ["Hunter.io", "https://hunter.io/", "Email", "Поиск email адресов, связанных с компанией/доменом."],
+        ["Holehe", "https://github.com/megadose/holehe", "Email", "Проверка регистрации email на 120+ сайтах (забыли пароль)."],
+        ["EmailRep.io", "https://emailrep.io/", "Email", "Анализ репутации и возраста email адреса."],
+        ["Phonebook.cz", "https://phonebook.cz/", "Email", "Поиск email, доменов и URL в утечках."],
+        ["TrueCaller", "https://www.truecaller.com/", "Phone", "Крупнейшая база телефонных номеров и спама."],
+        ["Sync.me", "https://sync.me/", "Phone", "Поиск владельца номера, синхронизация с соцсетями."],
+        ["EmobileTracker", "https://emobiletracker.com/", "Phone", "Отслеживание мобильных номеров (Индия и мир)."],
+        ["Infobel", "https://www.infobel.com/", "Phone", "Международный телефонный справочник."],
+        ["Shodan", "https://www.shodan.io/", "Infrastructure", "Поисковик для устройств, подключенных к интернету (IoT, сервера)."],
+        ["Censys", "https://censys.io/", "Infrastructure", "Анализ поверхности атаки и поиск хостов."],
+        ["Whois.com", "https://www.whois.com/", "Domain", "Проверка регистрационных данных домена."],
+        ["DNSDumpster", "https://dnsdumpster.com/", "Domain", "Карта DNS записей и поддоменов."],
+        ["ViewDNS.info", "https://viewdns.info/", "Domain", "Набор инструментов: Reverse IP, DNS History и др."],
+        ["SecurityTrails", "https://securitytrails.com/", "Domain", "Глубокая история DNS и поддоменов."],
+        ["UrlScan.io", "https://urlscan.io/", "Domain", "Сканирование и анализ веб-сайтов (скриншоты, технологии)."],
+        ["BuiltWith", "https://builtwith.com/", "Tech Stack", "Определение технологий, на которых работает сайт."],
+        ["Wappalyzer", "https://www.wappalyzer.com/", "Tech Stack", "Определение CMS, аналитики и фреймворков."],
+        ["Hurricane Electric", "https://bgp.he.net/", "Infrastructure", "Анализ BGP маршрутизации и IP блоков."],
+        ["PimEyes", "https://pimeyes.com/", "Images", "Лучший поиск лиц в интернете (Reverse Face Search)."],
+        ["TinEye", "https://tineye.com/", "Images", "Обратный поиск изображений (первоисточник)."],
+        ["Yandex Images", "https://yandex.com/images/", "Images", "Лучший поиск по картинкам для СНГ и лиц."],
+        ["Google Lens", "https://lens.google/", "Images", "Распознавание объектов и поиск по фото."],
+        ["InVid", "https://www.invid-project.eu/", "Video", "Верификация видео и анализ метаданных."],
+        ["ExifTool", "https://exiftool.org/", "Images", "Чтение, запись и редактирование метаданных (EXIF)."],
+        ["Google Earth Pro", "https://www.google.com/earth/versions/", "Maps", "Трехмерная карта мира и исторические снимки."],
+        ["SunCalc", "https://suncalc.org/", "Maps", "Определение времени съемки по положению солнца и теням."],
+        ["Wikimapia", "http://wikimapia.org/", "Maps", "Карта, редактируемая пользователями (отмечены военные объекты и др)."],
+        ["Yandex Maps", "https://yandex.ru/maps/", "Maps", "Панорамы и карты, актуальные для РФ/СНГ."],
+        ["Strava Heatmap", "https://www.strava.com/heatmap", "Geolocation", "Тепловая карта активности спортсменов (базы, маршруты)."],
+        ["SnapMap", "https://map.snapchat.com/", "Geolocation", "Публичные сторис на карте в реальном времени."],
+        ["MarineTraffic", "https://www.marinetraffic.com/", "Transport", "Отслеживание судов в реальном времени."],
+        ["FlightRadar24", "https://www.flightradar24.com/", "Transport", "Отслеживание самолетов в реальном времени."],
+        ["Wayback Machine", "https://archive.org/web/", "Archives", "История интернета, сохраненные копии сайтов."],
+        ["Archive.today", "https://archive.today/", "Archives", "Сохранение веб-страниц 'как есть', обход пейволлов."],
+        ["CachedView", "http://cachedview.com/", "Archives", "Поиск кэшированных версий Google/Yandex."],
+        ["OpenCorporates", "https://opencorporates.com/", "Business", "Крупнейшая открытая база данных компаний."],
+        ["LinkedIn", "https://www.linkedin.com/", "Business", "Поиск сотрудников и связей компаний."],
+        ["Crunchbase", "https://www.crunchbase.com/", "Business", "Информация о стартапах и инвестициях."],
+        ["Offshore Leaks", "https://offshoreleaks.icij.org/", "Business", "База данных офшорных утечек (Panama Papers)."],
+        ["Ahmia", "https://ahmia.fi/", "DarkWeb", "Поисковик для сети Tor."],
+        ["Tor Browser", "https://www.torproject.org/", "DarkWeb", "Браузер для анонимного доступа к .onion сайтам."],
+        ["Blockchain.com", "https://www.blockchain.com/explorer", "Crypto", "Обозреватель блоков Bitcoin/Ethereum."],
+        ["Etherscan", "https://etherscan.io/", "Crypto", "Анализ транзакций Ethereum."],
+        ["WalletExplorer", "https://www.walletexplorer.com/", "Crypto", "Связи биткоин-кошельков."],
+        ["CyberChef", "https://gchq.github.io/CyberChef/", "Tools", "Швейцарский нож для декодирования (Base64, Hex и т.д.)."],
+        ["OSINT Framework", "https://osintframework.com/", "Directory", "Визуальное дерево OSINT инструментов."],
+        ["SpiderFoot", "https://www.spiderfoot.net/", "Automation", "Автоматизированный сбор OSINT данных."],
+        ["Maltego", "https://www.maltego.com/", "Visualization", "Построение графов связей для расследований."],
+        ["Nitter", "https://nitter.net/", "Twitter", "Просмотр Twitter без регистрации и рекламы."],
+        ["TweetDeck", "https://tweetdeck.twitter.com/", "Twitter", "Мониторинг твитов в реальном времени."],
+        ["Instaloader", "https://instaloader.github.io/", "Instagram", "Скачивание фото/видео из Instagram (CLI)."],
+        ["Snoop", "https://github.com/snooppr/snoop", "Username", "Один из лучших инструментов поиска по никам (RU)."],
+        ["Telegram", "https://web.telegram.org/", "Telegram", "Поиск по каналам и ботам (Telemetr, TGStat)."],
+        ["TGStat", "https://tgstat.ru/", "Telegram", "Аналитика Telegram каналов."],
+        ["Telemetr", "https://telemetr.me/", "Telegram", "Поиск и аналитика в Telegram."],
+        ["Nalog.ru", "https://egrul.nalog.ru/", "Govt RU", "Проверка контрагентов ЕГРЮЛ/ЕГРИП."],
+        ["FSSP", "https://fssp.gov.ru/", "Govt RU", "Банк данных исполнительных производств."],
+        ["MVD Rozysk", "https://mvd.ru/wanted", "Govt RU", "Федеральный розыск."],
+        ["Notariat", "https://reestr-dover.ru/", "Govt RU", "Проверка доверенностей."],
+        ["WiGLE", "https://wigle.net/", "WiFi", "База данных беспроводных сетей и их координат."],
+        ["Public WiFi", "https://wiffinity.com/", "WiFi", "Пароли от публичных WiFi точек."],
+        ["Lookup-ID", "https://lookup-id.com/", "Facebook", "Поиск числового ID профиля Facebook по ссылке."],
+        ["Sowdust", "https://sowdust.github.io/fb-search/", "Facebook", "Генератор поисковых запросов для Facebook Graph Search."],
+        ["WhoPostedWhat", "https://whopostedwhat.com/", "Facebook", "Поиск постов в Facebook по конкретной дате и ключевым словам."],
+        ["Imginn", "https://imginn.com/", "Instagram", "Просмотр и скачивание историй/постов Instagram без входа."],
+        ["Picuki", "https://www.picuki.com/", "Instagram", "Онлайн редактор и просмотрщик Instagram профилей."],
+        ["Barinsta", "https://github.com/AustinHuang0131/barinsta", "Instagram", "Альтернативный клиент Android для просмотра Инсты (Open Source)."],
+        ["SocialBlade", "https://socialblade.com/", "Analytics", "Глубокая аналитика статистики YouTube, Twitter, Twitch, Instagram."],
+        ["Truth Nest", "https://truthnest.com/", "Twitter", "Профилирование и аналитика Twitter аккаунтов."],
+        ["Foller.me", "https://foller.me/", "Twitter", "Быстрый анализ профиля Twitter: теги, время активности, меншоны."],
+        ["Reveddit", "https://www.reveddit.com/", "Reddit", "Просмотр удаленных модераторами постов и комментариев на Reddit."],
+        ["Reddit User Analyser", "https://reddit-user-analyser.netlify.app/", "Reddit", "Анализ активности пользователя Reddit (сабреддиты, слова)."],
+        ["Urlebird", "https://urlebird.com/", "TikTok", "Просмотр и скачивание видео TikTok без приложения."],
+        ["TikTokApi", "https://github.com/davidteather/TikTok-Api", "TikTok", "Python библиотека для сбора данных из TikTok."],
+        ["DiscordHub", "https://discordhub.com/", "Discord", "Поиск пользователей и серверов Discord."],
+        ["Discord.id", "https://discord.id/", "Discord", "Получение даты регистрации аккаунта по ID."],
+        ["Google Hacking Database", "https://www.exploit-db.com/google-hacking-database", "Dorks", "База данных готовых запросов для поиска уязвимостей и файлов."],
+        ["DorkSearch", "https://dorksearch.com/", "Dorks", "Удобный генератор Google Dorks."],
+        ["Carrot2", "https://search.carrot2.org/", "Search", "Кластеризация результатов поиска (группировка по темам)."],
+        ["Million Short", "https://millionshort.com/", "Search", "Поисковик, который убирает топ-100/1000 популярных сайтов из выдачи."],
+        ["Grep.app", "https://grep.app/", "Code Search", "Поиск по коду в миллионах репозиториев GitHub."],
+        ["VirusTotal", "https://www.virustotal.com/", "Threat Intel", "Проверка файлов и ссылок 70+ антивирусами."],
+        ["Any.Run", "https://app.any.run/", "Threat Intel", "Интерактивная песочница для анализа вредоносного ПО."],
+        ["Hybrid Analysis", "https://www.hybrid-analysis.com/", "Threat Intel", "Бесплатный анализ малвари."],
+        ["OTX AlienVault", "https://otx.alienvault.com/", "Threat Intel", "Крупнейшее сообщество обмена данными об угрозах (IoC)."],
+        ["AbuseIPDB", "https://www.abuseipdb.com/", "Threat Intel", "Проверка IP на причастность к хакерским атакам."],
+        ["Talos Intelligence", "https://talosintelligence.com/", "Threat Intel", "Карта угроз и репутация IP от Cisco."],
+        ["GrayhatWarfare", "https://buckets.grayhatwarfare.com/", "Cloud", "Поиск открытых AWS S3 корзин (файлы, базы данных)."],
+        ["OSINT.sh Buckets", "https://osint.sh/buckets/", "Cloud", "Еще один инструмент поиска по публичным бакетам."],
+        ["Pastebin", "https://pastebin.com/", "Text", "Самый популярный сервис хранения текста (часто утечки кода)."],
+        ["Ghostbin", "https://ghostbin.com/", "Text", "Альтернатива Pastebin."],
+        ["Psbdmp", "https://psbdmp.ws/", "Text", "Поиск по дампам pastebin (даже удаленным)."],
+        ["FastPeopleSearch", "https://www.fastpeoplesearch.com/", "People US", "Бесплатный поиск людей в США (адреса, телефоны)."],
+        ["FamilyTreeNow", "https://www.familytreenow.com/", "People US", "Генеалогические данные и связи людей в США."],
+        ["Whitepages", "https://www.whitepages.com/", "People US", "Классический справочник людей."],
+        ["WebMii", "https://webmii.com/", "People Global", "Агрегатор информации о человеке по имени."],
+        ["VinCheck", "https://vincheck.info/", "Transport", "Бесплатная проверка VIN кода автомобиля (история, угон)."],
+        ["PlatesMania", "https://platesmania.com/", "Transport", "Фотографии автомобилей по номерам (весь мир)."],
+        ["ADS-B Exchange", "https://www.adsbexchange.com/", "Transport", "Нефильтрованный трекинг авиации (включая военную/частную)."],
+        ["RailRadar", "http://railradar.net/", "Transport", "Отслеживание поездов (преимущественно Европа/РФ)."],
+        ["MAC Address Lookup", "https://macvendors.com/", "Hardware", "Определение производителя устройства по MAC-адресу."],
+        ["Opencellid", "https://www.opencellid.org/", "Wireless", "Крупнейшая открытая база данных вышек сотовой связи (GPS)."],
+        ["CellMapper", "https://www.cellmapper.net/", "Wireless", "Карта покрытия и вышек сотовых операторов."],
+        ["BitRef", "https://bitref.com/", "Crypto", "Проверка баланса биткоин кошелька."],
+        ["BitcoinAbuse", "https://www.bitcoinabuse.com/", "Crypto", "База данных адресов, замеченных в вымогательстве и шантаже."],
+        ["Blockchair", "https://blockchair.com/", "Crypto", "Универсальный поисковик по блокчейнам (BTC, ETH, XRP и др.)."],
+        ["FOCA", "https://github.com/ElevenPaths/FOCA", "Metadata", "Мощный десктопный инструмент для извлечения метаданных из документов сайта."],
+        ["Jeffrey's Image Metadata", "http://exif.regex.info/exif.cgi", "Images", "Детальный онлайн просмотрщик EXIF данных."],
+        ["Acrobat Online", "https://www.adobe.com/acrobat/online.html", "Docs", "Конвертация и работа с PDF онлайн."],
+        ["GitHut", "https://githut.info/", "Code", "Статистика и поиск активных языков/репозиториев на GitHub."],
+        ["Gitrob", "https://github.com/michenriksen/gitrob", "Code", "Поиск конфиденциальных файлов (ключи, пароли) в истории коммитов."],
+        ["TruffleHog", "https://github.com/trufflesecurity/trufflehog", "Code", "Автоматический поиск секретов (API keys, tokens) в репозиториях."],
+        ["Gitleaks", "https://github.com/zricethezav/gitleaks", "Code", "SAST инструмент для поиска секретов в git (очень быстрый)."],
+        ["Sourcegraph", "https://sourcegraph.com/search", "Code", "Поисковик по коду (как Google, но для программистов)."],
+        ["PublicWWW", "https://publicwww.com/", "Code", "Поиск по исходному коду веб-страниц (HTML, JS, CSS signatures)."],
+        ["Repo-Supervisor", "https://github.com/auth0/repo-supervisor", "Code", "Сканирование кода на наличие паролей перед коммитом."],
+        ["Octosuite", "https://github.com/bellingcat/octosuite", "Code", "Продвинутый поиск по GitHub от Bellingcat."],
+        ["DeHashed", "https://dehashed.com/", "Leaks", "Поисковик по взломанным базам (Email, IP, Username, Hash)."],
+        ["LeakCheck", "https://leakcheck.io/", "Leaks", "Проверка почты и логинов в слитых базах (популярен в СНГ)."],
+        ["Snusbase", "https://snusbase.com/", "Leaks", "Индексатор утечек данных и дехешер паролей."],
+        ["Intelligence X", "https://intelx.io/", "Leaks", "Поисковик по архивам, Darknet, утечкам и I2P."],
+        ["BreachDirectory", "https://breachdirectory.org/", "Leaks", "Бесплатный поиск по утечкам паролей."],
+        ["Hashes.org", "https://hashes.org/", "Leaks", "База данных расшифрованных хешей."],
+        ["CrackStation", "https://crackstation.net/", "Leaks", "Бесплатный онлайн дехешер (MD5, SHA1 и др.)."],
+        ["Leak-Lookup", "https://leak-lookup.com/", "Leaks", "Поиск по тысячам баз данных утечек."],
+        ["ZoomEye", "https://www.zoomeye.org/", "Infrastructure", "Китайский аналог Shodan (очень большая база)."],
+        ["FOFA", "https://fofa.info/", "Infrastructure", "Поисковик киберпространства (популярен в Азии)."],
+        ["Hunter.how", "https://hunter.how/", "Infrastructure", "Современный поисковик интернет-активов и уязвимостей."],
+        ["BinaryEdge", "https://www.binaryedge.io/", "Infrastructure", "Сканирование интернета и анализ угроз (IP, порты)."],
+        ["LeakIX", "https://leakix.net/", "Infrastructure", "Индексация открытых сервисов и баз данных (Misconfigurations)."],
+        ["Criminal IP", "https://www.criminalip.io/", "Infrastructure", "Поисковик CTI (Cyber Threat Intelligence) и активов."],
+        ["Netlas.io", "https://netlas.io/", "Infrastructure", "Сканер и поисковик интернета (сертификаты, домены, WHOIS)."],
+        ["Google Alerts", "https://www.google.com/alerts", "News", "Автоматические уведомления о новых упоминаниях в Google."],
+        ["GDELT Project", "https://www.gdeltproject.org/", "News", "Глобальная база данных событий и настроений в СМИ (Big Data)."],
+        ["Liveuamap", "https://liveuamap.com/", "News", "Карта конфликтов и происшествий в реальном времени."],
+        ["NewsNow", "https://www.newsnow.co.uk/", "News", "Агрегатор новостей с фильтрацией по темам."],
+        ["BuzzSumo", "https://buzzsumo.com/", "News", "Поиск самого вирусного контента в соцсетях."],
+        ["Feedly", "https://feedly.com/", "News", "RSS ридер и агрегатор блогов/новостей."],
+        ["Global Incident Map", "http://www.globalincidentmap.com/", "News", "Карта инцидентов (терроризм, безопасность)."],
+        ["Wifimap.io", "https://www.wifimap.io/", "WiFi", "Пароли от WiFi по всему миру (Community driven)."],
+        ["Mylnikov Geo", "https://www.mylnikov.org/", "WiFi", "Определение координат по BSSID (MAC адресу роутера)."],
+        ["RadioReference", "https://www.radioreference.com/", "Radio", "Крупнейшая база частот радиосвязи (полиция, службы)."],
+        ["SDR-Radio", "https://www.sdr-radio.com/", "Radio", "Софт для работы с Software Defined Radio."],
+        ["UserSearch", "https://usersearch.org/", "Username", "Глубокий поиск людей и ников на дейтинг-сайтах и форумах."],
+        ["CheckUser", "https://checkuser.org/", "Username", "Проверка занятости логина на популярных ресурсах."],
+        ["KnowEm", "https://knowem.com/", "Username", "Поиск бренда или ника в 500+ соцсетях."],
+        ["Idcrawl", "https://idcrawl.com/", "Username", "Поиск людей по соцсетям."],
+        ["FaceCheck.id", "https://facecheck.id/", "Images", "Еще один мощный поисковик лиц (AI Face Search)."],
+        ["Sublist3r", "https://github.com/aboul3la/Sublist3r", "Domain", "Быстрый перебор поддоменов (Python)."],
+        ["Amass", "https://github.com/owasp-amass/amass", "Domain", "OWASP инструмент для глубокого маппинга сети."],
+        ["HackerTarget", "https://hackertarget.com/", "Domain", "Набор онлайн утилит (Nmap, Ping, DNS, IP lookup)."],
+        ["Robtex", "https://www.robtex.com/", "Domain", "Глубокий анализ IP, DNS и AS."],
+        ["MXToolbox", "https://mxtoolbox.com/", "Domain", "Диагностика почтовых серверов и DNS записей."],
+        ["DNSTwist", "https://github.com/elceef/dnstwist", "Domain", "Поиск фишинговых доменов (тайпосквоттинг)."],
+        ["CRT.sh", "https://crt.sh/", "Domain", "Поиск поддоменов через сертификаты (Certificate Transparency)."],
+        ["Rusprofile", "https://www.rusprofile.ru/", "Business RU", "Проверка контрагентов в РФ (выручка, учредители)."],
+        ["List-Org", "https://www.list-org.com/", "Business RU", "Каталог организаций (связи, телефоны)."],
+        ["SudRF", "https://sudrf.ru/", "Govt RU", "ГАС 'Правосудие' - поиск по судебным делам."],
+        ["Mosgorsud", "https://mos-gorsud.ru/", "Govt RU", "Поиск дел в судах Москвы."],
+        ["Kad.arbitr", "https://kad.arbitr.ru/", "Govt RU", "Картотека арбитражных дел РФ."],
+        ["Fedresurs", "https://fedresurs.ru/", "Govt RU", "Реестр сведений о фактах деятельности юрлиц (банкротства)."],
+        ["HonestBusiness", "https://honestbusiness.ru/", "Business RU", "Данные о компаниях и ИП."],
+        ["YouControl", "https://youcontrol.com.ua/", "Business UA", "Полное досье на каждую компанию Украины."],
+        ["Opendatabot", "https://opendatabot.com/", "Business UA", "Мониторинг регистрационных данных компаний и людей."],
+        ["Clarity Project", "https://clarity-project.info/", "Business UA", "База данных тендеров и компаний."],
+        ["Adata.kz", "https://adata.kz/", "Business KZ", "Проверка контрагентов Казахстана."],
+        ["Statsnet", "https://statsnet.co/", "Business CIS", "База компаний Казахстана, РФ, Украины, Беларуси."],
+        ["Archive.org Wayback", "https://archive.org/web/", "Archives", "Основной архив интернета."],
+        ["UK Web Archive", "https://www.webarchive.org.uk/", "Archives", "Архив сайтов домена .uk."],
+        ["Memento Time Travel", "http://timetravel.mementoweb.org/", "Archives", "Мета-поиск по всем веб-архивам сразу."],
+        ["GhostProject", "https://ghostproject.fr/", "Leaks", "Поиск по базе данных старых утечек."],
+        ["Mat2", "https://0xacab.org/jvoisin/mat2", "Metadata", "Инструмент для удаления метаданных (Privacy)."],
+        ["Exif.tools", "https://exif.tools/", "Metadata", "Простой онлайн просмотрщик метаданных."],
+        ["Pdfcandy", "https://pdfcandy.com/", "Docs", "Набор инструментов для работы с PDF (OCR, Edit)."],
+        ["I Love PDF", "https://www.ilovepdf.com/", "Docs", "Редактирование и конвертация PDF."],
+        ["ChatGPT", "https://chat.openai.com/", "AI", "Анализ текстов, генерация дорков, summary."],
+        ["Perplexity", "https://www.perplexity.ai/", "AI", "AI-поисковик с указанием источников (отлично для OSINT)."],
+        ["Phind", "https://www.phind.com/", "AI", "Поисковик для разработчиков (помогает с кодом инструментов)."],
+        ["Bellingcat AI Tools", "https://www.bellingcat.com/resources/", "AI", "Подборка AI инструментов от Bellingcat."],
+        ["Tor.taxi", "https://tor.taxi/", "DarkWeb", "Каталог проверенных .onion ссылок."],
+        ["Dark.fail", "https://dark.fail/", "DarkWeb", "Мониторинг статуса популярных даркнет-маркетов."],
+        ["OnionLand", "https://onionlandsearchengine.com/", "DarkWeb", "Поисковик по Tor сети."],
+        ["CSI Linux", "https://csilinux.com/", "OS", "Дистрибутив Linux специально для OSINT расследований."],
+        ["Trace Labs OSINT VM", "https://www.tracelabs.org/initiatives/osint-vm", "OS", "Виртуальная машина, настроенная для поиска пропавших людей."],
+        ["Whonix", "https://www.whonix.org/", "Privacy", "ОС для максимальной анонимности в сети."],
+        ["Tails", "https://tails.boum.org/", "Privacy", "Амнезиальная ОС (запускается с флешки, не оставляет следов)."],
+        ["ProtonMail", "https://proton.me/mail", "Privacy", "Зашифрованная почта."],
+        ["TempMail", "https://temp-mail.org/", "Privacy", "Временная почта для регистраций."],
+        ["CyberBackgroundChecks", "https://cyberbackgroundchecks.com/", "People US", "Глубокая проверка бэкграунда людей в США."],
+        ["NumLookup", "https://www.numlookup.com/", "Phone", "Бесплатный обратный поиск номера (US/World)."],
+        ["Softpedia", "https://www.softpedia.com/", "Tools", "Безопасный каталог софта (поиск старых версий)."],
+        ["AlternativeTo", "https://alternativeto.net/", "Tools", "Поиск аналогов любого софта."],
+        ["Subfinder", "https://github.com/projectdiscovery/subfinder", "Recon", "Очень быстрый инструмент для пассивного поиска поддоменов."],
+        ["Naabu", "https://github.com/projectdiscovery/naabu", "Recon", "Быстрый сканер портов (написан на Go)."],
+        ["Httpx", "https://github.com/projectdiscovery/httpx", "Recon", "Многофункциональный HTTP toolkit (проверка статусов, технологий)."],
+        ["Nuclei", "https://github.com/projectdiscovery/nuclei", "Recon", "Мощнейший сканер уязвимостей на основе шаблонов (YAML)."],
+        ["Katana", "https://github.com/projectdiscovery/katana", "Recon", "Современный краулер (паук) для сбора ссылок с сайта."],
+        ["Assetfinder", "https://github.com/tomnomnom/assetfinder", "Recon", "Поиск доменов и поддоменов в различных источниках."],
+        ["Waybackurls", "https://github.com/tomnomnom/waybackurls", "Recon", "Выгрузка всех URL домена из Web Archive (для поиска скрытых параметров)."],
+        ["Gau (Get All Urls)", "https://github.com/lc/gau", "Recon", "Сбор ссылок из AlienVault, Wayback, CommonCrawl."],
+        ["Ffuf", "https://github.com/ffuf/ffuf", "Recon", "Быстрый фаззер для поиска скрытых директорий и файлов."],
+        ["Dirsearch", "https://github.com/maurosoria/dirsearch", "Recon", "Классический инструмент брутфорса директорий."],
+        ["Gobuster", "https://github.com/OJ/gobuster", "Recon", "Инструмент для перебора URIs, DNS и VHost."],
+        ["Feroxbuster", "https://github.com/epi052/feroxbuster", "Recon", "Рекурсивный поиск контента (Rust)."],
+        ["Masscan", "https://github.com/robertdavidgraham/masscan", "Recon", "Самый быстрый сканер портов интернета (TCP)."],
+        ["ZMap", "https://zmap.io/", "Recon", "Сканер сети, способный просканировать весь интернет за 45 минут."],
+        ["Nmap", "https://nmap.org/", "Recon", "Король сетевых сканеров. Должен быть у каждого."],
+        ["WhatWeb", "https://github.com/urbanadventurer/WhatWeb", "Recon", "Определение CMS, веб-серверов и плагинов."],
+        ["Nikto", "https://github.com/sullo/nikto", "Recon", "Сканер веб-серверов на наличие старых скриптов и конфигов."],
+        ["WafW00f", "https://github.com/EnableSecurity/wafw00f", "Recon", "Определение типа Web Application Firewall (WAF)."],
+        ["Arjun", "https://github.com/s0md3v/Arjun", "Recon", "Поиск скрытых HTTP параметров."],
+        ["LinkFinder", "https://github.com/GerbenJavado/LinkFinder", "Recon", "Поиск эндпоинтов в JS файлах."],
+        ["JSFinder", "https://github.com/ThreeZh1/JSFinder", "Recon", "Сбор поддоменов и ссылок из JavaScript файлов."],
+        ["CloudEnum", "https://github.com/initstring/cloud_enum", "Cloud", "Перебор публичных ресурсов в AWS, Azure и Google Cloud."],
+        ["CloudSplaining", "https://github.com/salesforce/cloudsplaining", "Cloud", "Анализ IAM политик AWS на наличие рисков."],
+        ["Pacu", "https://github.com/RhinoSecurityLabs/pacu", "Cloud", "Фреймворк для эксплуатации AWS (AWS exploitation framework)."],
+        ["ScoutSuite", "https://github.com/nccgroup/ScoutSuite", "Cloud", "Аудит безопасности облачных сред (Multi-cloud)."],
+        ["Prowler", "https://github.com/prowler-cloud/prowler", "Cloud", "Аудит безопасности AWS (Best Practices)."],
+        ["S3Scanner", "https://github.com/sa7mon/S3Scanner", "Cloud", "Сканирование открытых S3 бакетов и дамп содержимого."],
+        ["GCPBucketBrute", "https://github.com/RhinoSecurityLabs/GCPBucketBrute", "Cloud", "Брутфорс Google Storage Buckets."],
+        ["Azure Hunter", "https://github.com/DarkQuasar/AzureHunter", "Cloud", "Форензика и поиск угроз в Azure."],
+        ["MISP", "https://www.misp-project.org/", "CTI", "Платформа для обмена индикаторами компрометации (Malware Information Sharing)."],
+        ["OpenCTI", "https://www.opencti.io/", "CTI", "Платформа для управления знаниями о киберугрозах."],
+        ["Pulsedive", "https://pulsedive.com/", "CTI", "Бесплатный анализ индикаторов (IP, домены, URL)."],
+        ["ThreatMiner", "https://www.threatminer.org/", "CTI", "Data mining для Threat Intelligence."],
+        ["URLScan.io", "https://urlscan.io/", "CTI", "Сканер веб-сайтов (песочница для URL)."],
+        ["Browserling", "https://www.browserling.com/", "CTI", "Интерактивный кросс-браузерный тест (безопасное открытие ссылок)."],
+        ["PhishTank", "https://phishtank.org/", "CTI", "База данных фишинговых ссылок."],
+        ["URLHaus", "https://urlhaus.abuse.ch/", "CTI", "База данных сайтов, распространяющих малварь."],
+        ["MalwareBazaar", "https://bazaar.abuse.ch/", "CTI", "Коллекция образцов вредоносного ПО."],
+        ["PolySwarm", "https://polyswarm.io/", "CTI", "Мульти-движковый антивирус (Crowdsourced)."],
+        ["Intezer Analyze", "https://analyze.intezer.com/", "CTI", "Анализ кода (Genetic Malware Analysis)."],
+        ["Yara", "https://virustotal.github.io/yara/", "CTI", "Инструмент для классификации малвари по паттернам."],
+        ["Autopsy", "https://www.autopsy.com/", "Forensics", "Главный GUI инструмент для цифровой криминалистики."],
+        ["Volatility", "https://github.com/volatilityfoundation/volatility3", "Forensics", "Фреймворк для анализа оперативной памяти (RAM)."],
+        ["Wireshark", "https://www.wireshark.org/", "Forensics", "Анализатор сетевого трафика (PCAP)."],
+        ["NetworkMiner", "https://www.netresec.com/?page=NetworkMiner", "Forensics", "Пассивный анализатор трафика (извлекает файлы и картинки)."],
+        ["FTK Imager", "https://accessdata.com/product-download/ftk-imager-version-4-7-1", "Forensics", "Создание образов дисков и просмотр данных."],
+        ["Binwalk", "https://github.com/ReFirmLabs/binwalk", "Forensics", "Анализ прошивок и извлечение файлов из бинарников."],
+        ["Sleuth Kit", "https://www.sleuthkit.org/", "Forensics", "Библиотека инструментов для анализа файловых систем."],
+        ["Bulk Extractor", "https://github.com/simsong/bulk_extractor", "Forensics", "Сканирование образа диска на наличие email, карт, URL."],
+        ["PhotoRec", "https://www.cgsecurity.org/wiki/PhotoRec", "Forensics", "Восстановление удаленных файлов (игнорирует файловую систему)."],
+        ["TestDisk", "https://www.cgsecurity.org/wiki/TestDisk", "Forensics", "Восстановление разделов диска."],
+        ["RegRipper", "https://github.com/keydet89/RegRipper3.0", "Forensics", "Анализ реестра Windows."],
+        ["StegOnline", "https://stegonline.georgeom.net/", "Stego", "Онлайн инструмент для стеганографии (поиск скрытых данных)."],
+        ["Steghide", "http://steghide.sourceforge.net/", "Stego", "Классический инструмент для скрытия данных в аудио и картинках."],
+        ["StegSolve", "http://www.caesum.com/handbook/StegSolve.jar", "Stego", "Анализ изображений фильтрами (Java)."],
+        ["Zsteg", "https://github.com/zed-0xff/zsteg", "Stego", "Поиск скрытых данных в PNG и BMP файлах."],
+        ["Aperisolve", "https://www.aperisolve.com/", "Stego", "Онлайн платформа для стеганоанализа."],
+        ["Infogreffe", "https://www.infogreffe.com/", "Business EU", "Реестр коммерческих судов Франции."],
+        ["Societe.com", "https://www.societe.com/", "Business EU", "База данных французских компаний."],
+        ["Unternehmensregister", "https://www.unternehmensregister.de/", "Business EU", "Реестр компаний Германии."],
+        ["KVK", "https://www.kvk.nl/", "Business EU", "Торговая палата Нидерландов."],
+        ["Brønnøysundregistrene", "https://www.brreg.no/", "Business EU", "Реестры Норвегии."],
+        ["Virksomhedsregister", "https://virksomhedsregister.dk/", "Business EU", "Центральный бизнес-реестр Дании."],
+        ["BRP", "https://data.gov.uk/dataset/land-registry-monthly-property-transaction-data", "Govt UK", "Данные о сделках с недвижимостью в Великобритании."],
+        ["Zecora", "https://zecora.com/", "Business US", "Поиск по корпоративным данным США."],
+        ["Justia", "https://dockets.justia.com/", "Govt US", "Поиск судебных исков США."],
+        ["PACER", "https://pacer.uscourts.gov/", "Govt US", "Федеральные судебные архивы США (платно, но мощно)."],
+        ["Black Book Online", "https://www.blackbookonline.info/", "Govt US", "Бесплатный агрегатор публичных записей (Public Records)."],
+        ["Ministry of Corporate Affairs", "https://www.mca.gov.in/content/mca/global/en/home.html", "Business India", "Реестр компаний Индии."],
+        ["Qcc.com", "https://www.qcc.com/", "Business CN", "Проверка китайских компаний (Qichacha)."],
+        ["Aiqicha", "https://aiqicha.baidu.com/", "Business CN", "Сервис Baidu для проверки компаний."],
+        ["Tianyancha", "https://www.tianyancha.com/", "Business CN", "Бизнес-разведка в Китае."],
+        ["Weibo Search", "https://s.weibo.com/", "Social CN", "Поиск по Weibo (китайский Twitter)."],
+        ["Youku", "https://www.youku.com/", "Video CN", "Китайский видеохостинг (аналог YouTube)."],
+        ["Bilibili", "https://www.bilibili.com/", "Video CN", "Популярная видеоплатформа в Китае."],
+        ["User32", "https://user32.com/", "Username", "Поиск по никнеймам."],
+        ["PeekYou", "https://www.peekyou.com/", "People", "Поиск людей по социальным сетям."],
+        ["Lullar", "https://com.lullar.com/", "People", "Поиск профилей по Email и имени."],
+        ["Yasni", "https://www.yasni.com/", "People", "Мета-поисковик людей (Германия/Мир)."],
+        ["Person LookUp", "https://personlookup.com.au/", "People AU", "Поиск людей в Австралии."],
+        ["Canada411", "https://411.ca/", "People CA", "Справочник людей Канады."],
+        ["Ukphonebook", "https://www.ukphonebook.com/", "People UK", "Телефонная книга Великобритании."],
+        ["SecLists", "https://github.com/danielmiessler/SecLists", "Wordlists", "Главная коллекция словарей (пароли, юзернеймы, фаззинг)."],
+        ["RockYou", "https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt", "Wordlists", "Легендарный словарь паролей."],
+        ["Assetnote Wordlists", "https://wordlists.assetnote.io/", "Wordlists", "Автоматически обновляемые словари для фаззинга."],
+        ["Weakpass", "https://weakpass.com/", "Wordlists", "Огромная коллекция паролей для брутфорса."],
+        ["Exploit-DB", "https://www.exploit-db.com/", "Exploits", "Архив эксплойтов (CVE)."],
+        ["Vulners", "https://vulners.com/", "Exploits", "Поисковик по уязвимостям безопасности."],
+        ["Packet Storm", "https://packetstormsecurity.com/", "Exploits", "Новости безопасности и эксплойты."],
+        ["CXSecurity", "https://cxsecurity.com/", "Exploits", "База данных уязвимостей."],
+        ["Sploitus", "https://sploitus.com/", "Exploits", "Удобный поиск эксплойтов и хакерских утилит."],
+        ["MobSF", "https://github.com/MobSF/Mobile-Security-Framework-MobSF", "Mobile", "Фреймворк для анализа безопасности Android/iOS приложений."],
+        ["Apktool", "https://ibotpeaches.github.io/Apktool/", "Mobile", "Реверс-инжиниринг APK файлов."],
+        ["Jadx", "https://github.com/skylot/jadx", "Mobile", "Декомпилятор из Dex в Java GUI."],
+        ["Frida", "https://frida.re/", "Mobile", "Инструмент для динамического анализа (инъекции кода)."],
+        ["APK Combo", "https://apkcombo.com/", "Mobile", "Скачивание APK файлов напрямую из Google Play."],
+        ["APKPure", "https://apkpure.com/", "Mobile", "Зеркало приложений Android (исторические версии)."],
+        ["MailTester", "https://www.mail-tester.com/", "Email Tech", "Проверка на спамность вашего письма."],
+        ["MXToolbox SuperTool", "https://mxtoolbox.com/SuperTool.aspx", "Email Tech", "Все возможные проверки MX/DNS в одном месте."],
+        ["DMARC Analyzer", "https://dmarcanalyzer.com/", "Email Tech", "Анализ DMARC записей домена."],
+        ["SPF Record Checker", "https://www.kitterman.com/spf/validate.html", "Email Tech", "Валидация SPF записей."],
+        ["Metagoofil", "https://github.com/laramies/metagoofil", "Metadata", "Сбор метаданных из публичных документов (pdf, doc, xls)."],
+        ["Exiflooter", "https://github.com/aydinnyunus/exiflooter", "Metadata", "Python скрипт для извлечения геолокации из изображений."],
+        ["Ghiro", "https://www.getghiro.org/", "Metadata", "Автоматизированный анализ изображений (Forensics)."],
+        ["Torch", "http://xmh57jrknzkhv6y3ls3ubitz68473q6voq5vux3xa6gtz3k6uptcbyyd.onion/", "DarkWeb", "Один из старейших поисковиков Tor."],
+        ["NotEvil", "http://hss3uro2hsxfogfq.onion/", "DarkWeb", "Поисковик Tor (без рекламы)."],
+        ["ProPublica", "https://www.propublica.org/", "News", "Независимая журналистика расследований (есть .onion версия)."],
+        ["Riseup", "https://riseup.net/", "Privacy", "Защищенная почта и чаты для активистов."],
+        ["TGStat", "https://tgstat.ru/", "Telegram", "Главная аналитика Telegram-каналов (аудитория, цитируемость)."],
+        ["Telemetr", "https://telemetr.me/", "Telegram", "Глубокая аналитика рекламы и ботоводов в Telegram."],
+        ["Lyzem", "https://lyzem.com/", "Telegram", "Поисковик по сообщениям в открытых чатах и каналах."],
+        ["Telegago", "https://cse.google.com/cse?q=+&cx=006368593537057042521:yZOihBhjC", "Telegram", "Google Custom Search по Telegram (эффективно ищет приватные ссылки)."],
+        ["Buzzim", "https://buzz.im/", "Telegram", "Поиск по сообщениям в Telegram (архивы чатов)."],
+        ["Tgram Search", "https://tgram.io/", "Telegram", "Каталог и поиск каналов."],
+        ["Telega.in", "https://telega.in/analytics", "Telegram", "Биржа каналов с хорошей аналитикой (кто и где закупал рекламу)."],
+        ["TgScanRobot", "https://t.me/tgscanrobot", "Telegram", "Бот для поиска групп, в которых состоит пользователь (платный, но мощный)."],
+        ["SangMata Info", "https://t.me/SangMataInfo_bot", "Telegram", "История смены никнеймов (Username) пользователя."],
+        ["Combot", "https://combot.org/", "Telegram", "Аналитика активности в чатах (топ говорунов)."],
+        ["Telethon", "https://github.com/LonamiWebs/Telethon", "Telegram", "Python библиотека для написания своих юзер-ботов и парсеров."],
+        ["Pyrogram", "https://github.com/pyrogram/pyrogram", "Telegram", "Альтернативная быстрая библиотека для Telegram API."],
+        ["ChatGPT", "https://chat.openai.com/", "AI Tools", "База. Анализ текстов, генерация дорков, помощь в кодинге."],
+        ["Perplexity AI", "https://www.perplexity.ai/", "AI Tools", "AI-поисковик, который дает ссылки на источники (отлично для фактчекинга)."],
+        ["Phind", "https://www.phind.com/", "AI Tools", "AI для разработчиков (помогает писать скрипты для OSINT)."],
+        ["GPTZero", "https://gptzero.me/", "AI Tools", "Определение текста, написанного нейросетью."],
+        ["Hugging Face", "https://huggingface.co/", "AI Tools", "Репозиторий всех открытых нейросетей (распознавание лиц, текста, аудио)."],
+        ["Whisper", "https://github.com/openai/whisper", "AI Tools", "Лучшая нейросеть для транскрибации аудио/видео в текст (OpenAI)."],
+        ["Gamma", "https://gamma.app/", "AI Tools", "Генерация презентаций и отчетов по собранным данным."],
+        ["Deepware Scanner", "https://scanner.deepware.ai/", "AI Tools", "Определение Deepfake видео."],
+        ["Synthesia", "https://www.synthesia.io/", "AI Tools", "Генерация видео-аватаров (для создания фейковых личностей)."],
+        ["This Person Does Not Exist", "https://thispersondoesnotexist.com/", "AI Tools", "Генерация реалистичных лиц несуществующих людей."],
+        ["Wigle.net", "https://wigle.net/", "Wireless", "Глобальная карта Wi-Fi точек доступа (поиск домашнего адреса по названию WiFi)."],
+        ["RTL-SDR", "https://www.rtl-sdr.com/", "Radio", "Главный ресурс по программно-определяемому радио (перехват сигналов за $20)."],
+        ["WebSDR", "http://websdr.org/", "Radio", "Прослушивание радиоэфира через браузер (приемники по всему миру)."],
+        ["SigID Wiki", "https://www.sigidwiki.com/", "Radio", "База данных звуков цифровых сигналов (чтобы понять, что вы перехватили)."],
+        ["Kismet", "https://www.kismetwireless.net/", "Wireless", "Сниффер беспроводных сетей (WiFi, Bluetooth, Zigbee)."],
+        ["Aircrack-ng", "https://www.aircrack-ng.org/", "Wireless", "Набор инструментов для аудита Wi-Fi (взлом WPA2)."],
+        ["Wifite2", "https://github.com/derv82/wifite2", "Wireless", "Автоматизированный аудит Wi-Fi сетей."],
+        ["HackRF", "https://greatscottgadgets.com/hackrf/", "Radio", "Оборудование для серьезной работы с радиочастотами."],
+        ["Opencellid", "https://opencellid.org/", "Wireless", "База данных сотовых вышек (GSM/LTE/5G)."],
+        ["CellMapper", "https://www.cellmapper.net/", "Wireless", "Карта покрытия сотовых операторов и расположения вышек."],
+        ["TruffleHog", "https://github.com/trufflesecurity/trufflehog", "DevSec", "Поиск секретов (ключей API, паролей) в истории Git."],
+        ["Gitleaks", "https://github.com/zricethezav/gitleaks", "DevSec", "Еще один мощный сканер секретов в репозиториях."],
+        ["Gitrob", "https://github.com/michenriksen/gitrob", "DevSec", "Поиск чувствительных файлов в публичных репозиториях организации."],
+        ["GitGuardian", "https://www.gitguardian.com/", "DevSec", "Мониторинг утечек секретов в реальном времени."],
+        ["Repo-supervisor", "https://github.com/auth0/repo-supervisor", "DevSec", "Сканер кода на наличие секретов (AWS Lambda)."],
+        ["SonarQube", "https://www.sonarqube.org/", "DevSec", "Автоматический анализ качества и безопасности кода."],
+        ["Snyk", "https://snyk.io/", "DevSec", "Поиск уязвимостей в зависимостях (библиотеках) проекта."],
+        ["GreyBox", "https://github.com/boring-sec/greybox", "DevSec", "Автоматизация аудита безопасности кода."],
+        ["SearchCode", "https://searchcode.com/", "DevSec", "Поисковик по исходным кодам (миллиарды строк)."],
+        ["PublicWWW", "https://publicwww.com/", "DevSec", "Поиск по исходному коду веб-страниц (найти сайты с одинаковым Google Analytics ID)."],
+        ["PrivacyTools", "https://www.privacytools.io/", "OpSec", "Гайды и инструменты для защиты приватности."],
+        ["Tor Project", "https://www.torproject.org/", "OpSec", "Браузер для анонимности и доступа к .onion."],
+        ["Tails OS", "https://tails.boum.org/", "OpSec", "Амнезиачная ОС (загружается с флешки, не оставляет следов)."],
+        ["Whonix", "https://www.whonix.org/", "OpSec", "ОС для максимальной анонимности (работает через VM)."],
+        ["Qubes OS", "https://www.qubes-os.org/", "OpSec", "Самая безопасная ОС (изоляция приложений)."],
+        ["ProtonMail", "https://proton.me/mail", "OpSec", "Шифрованная почта (Швейцария)."],
+        ["Tutanota", "https://tutanota.com/", "OpSec", "Альтернатива ProtonMail (Германия)."],
+        ["TempMail", "https://temp-mail.org/", "OpSec", "Временная почта для регистраций."],
+        ["10MinuteMail", "https://10minutemail.com/", "OpSec", "Почта на 10 минут."],
+        ["AnonAddy", "https://anonaddy.com/", "OpSec", "Анонимные псевдонимы для переадресации почты."],
+        ["SimpleLogin", "https://simplelogin.io/", "OpSec", "Создание алиасов для защиты основного email."],
+        ["Mullvad VPN", "https://mullvad.net/", "OpSec", "VPN без регистрации (можно платить криптой или наличкой)."],
+        ["IVPN", "https://www.ivpn.net/", "OpSec", "Приватный VPN, который реально ничего не логирует."],
+        ["VeraCrypt", "https://www.veracrypt.fr/", "OpSec", "Шифрование дисков и флешек."],
+        ["KeePassXC", "https://keepassxc.org/", "OpSec", "Оффлайн менеджер паролей."],
+        ["Bitwarden", "https://bitwarden.com/", "OpSec", "Open-source облачный менеджер паролей."],
+        ["Signal", "https://signal.org/", "OpSec", "Самый безопасный мессенджер."],
+        ["Session", "https://getsession.org/", "OpSec", "Мессенджер без номера телефона (на основе блокчейна)."],
+        ["PayloadAllTheThings", "https://github.com/swisskyrepo/PayloadsAllTheThings", "Cheatsheet", "Библия хакера: пейлоады для всех видов атак."],
+        ["GTFOBins", "https://gtfobins.github.io/", "Cheatsheet", "Как использовать стандартные Linux-команды для повышения привилегий."],
+        ["LOLBAS", "https://lolbas-project.github.io/", "Cheatsheet", "Аналог GTFOBins, но для Windows (Living Off The Land)."],
+        ["OWASP Top 10", "https://owasp.org/www-project-top-ten/", "Cheatsheet", "Топ-10 критических уязвимостей веб-приложений."],
+        ["HackTricks", "https://book.hacktricks.xyz/", "Cheatsheet", "Огромная википедия по техникам взлома (Carlos Polop)."],
+        ["OSINT Framework", "https://osintframework.com/", "Cheatsheet", "Интерактивная карта инструментов OSINT."],
+        ["Awesome OSINT", "https://github.com/jivoi/awesome-osint", "Cheatsheet", "Курируемый список лучших OSINT инструментов на GitHub."],
+        ["PortSwigger Academy", "https://portswigger.net/web-security", "Learning", "Бесплатное обучение веб-безопасности (лабораторные)."],
+        ["TryHackMe", "https://tryhackme.com/", "Learning", "Геймифицированное обучение кибербезопасности."],
+        ["HackTheBox", "https://www.hackthebox.com/", "Learning", "Тренировочный полигон для пентестеров."],
+        ["MITRE ATT&CK", "https://attack.mitre.org/", "Reference", "База знаний тактик и техник злоумышленников."],
+        ["YouControl", "https://youcontrol.com.ua/", "Business UA", "Полное досье на каждую компанию Украины."],
+        ["Opendatabot", "https://opendatabot.ua/", "Business UA", "Открытые данные Украины (суды, реестры, штрафы) в Telegram и Viber."],
+        ["Clarity Project", "https://clarity-project.info/", "Business UA", "База данных тендеров и компаний Украины."],
+        ["Prozorro", "https://prozorro.gov.ua/", "Business UA", "Государственные закупки Украины (видно кто, что и у кого купил)."],
+        ["Sudova Vlada", "https://court.gov.ua/fair/", "Govt UA", "Расписание судебных заседаний и реестр судебных решений."],
+        ["E-Data", "https://e-data.gov.ua/", "Govt UA", "Использование публичных средств (транзакции казначейства)."],
+        ["MVS Rozshuk", "https://wanted.mvs.gov.ua/", "Govt UA", "База розыска МВД Украины."],
+        ["AutoRIA", "https://auto.ria.com/", "Transport UA", "Проверка авто по VIN коду (история продаж)."],
+        ["Kartoteka.by", "https://kartoteka.by/", "Business BY", "Проверка контрагентов Беларуси."],
+        ["Egr.gov.by", "http://egr.gov.by/", "Business BY", "Единый госрегистр юрлиц и ИП Беларуси."],
+        ["MNS BY", "http://www.portal.nalog.gov.by/", "Business BY", "Реестры налоговой службы РБ (лжепредприниматели, банкроты)."],
+        ["Tender.by", "https://www.tender.by/", "Business BY", "Тендеры и закупки Беларуси."],
+        ["Adata.kz", "https://adata.kz/", "Business KZ", "Справочник юридических лиц Казахстана."],
+        ["Kompra", "https://kompra.kz/", "Business KZ", "Благонадежность контрагентов Казахстана."],
+        ["Statsnet KZ", "https://statsnet.co.kz/", "Business KZ", "Краткие справки о компаниях РК."],
+        ["Egov.kz", "https://egov.kz/cms/ru", "Govt KZ", "Портал электронного правительства Казахстана (открытые данные)."],
+        ["Kgd.gov.kz", "https://kgd.gov.kz/ru/services/taxpayer_search", "Govt KZ", "Поиск налогоплательщиков РК."],
+        ["DeHashed", "https://www.dehashed.com/", "Leaks", "Поисковик по утечкам (очень мощный, платный)."],
+        ["Intelx.io", "https://intelx.io/", "Leaks", "Intelligence X: поиск по архивам, утечкам, даркнету."],
+        ["LeakCheck", "https://leakcheck.io/", "Leaks", "Проверка почты и логинов в слитых базах (СНГ сегмент)."],
+        ["Snusbase", "https://snusbase.com/", "Leaks", "Индексатор утечек баз данных."],
+        ["BreachDirectory", "https://breachdirectory.org/", "Leaks", "Бесплатный поиск по утечкам (хеши паролей)."],
+        ["HaveIBeenPwned API", "https://haveibeenpwned.com/API/v3", "DevSec", "API для интеграции проверки утечек в свой софт."],
+        ["Selenium", "https://www.selenium.dev/", "Automation", "Автоматизация браузера (можно парсить сложные JS сайты)."],
+        ["Puppeteer", "https://pptr.dev/", "Automation", "Управление Chrome через Node.js (headless mode)."],
+        ["Playwright", "https://playwright.dev/", "Automation", "Современная альтернатива Puppeteer от Microsoft."],
+        ["Scrapy", "https://scrapy.org/", "Automation", "Мощный фреймворк для веб-скрейпинга на Python."],
+        ["BeautifulSoup", "https://www.crummy.com/software/BeautifulSoup/", "Automation", "Библиотека Python для парсинга HTML/XML."],
+        ["Octoparse", "https://www.octoparse.com/", "Automation", "Визуальный парсер сайтов без кода (No-code)."],
+        ["ParseHub", "https://www.parsehub.com/", "Automation", "Еще один визуальный скрейпер данных."],
+        ["Apify", "https://apify.com/", "Automation", "Платформа для готовых веб-скрейперов и автоматизации."],
+        ["Hurricane Electric", "https://he.net/", "Network", "Лучший инструмент для BGP, пиринга и анализа интернет-магистралей."],
+        ["PeeringDB", "https://www.peeringdb.com/", "Network", "База данных пиринговых сетей (кто с кем обменивается трафиком)."],
+        ["Robtex", "https://www.robtex.com/", "Network", "Глубокий анализ IP, DNS и маршрутов."],
+        ["SpyOnWeb", "https://spyonweb.com/", "Network", "Поиск сайтов, связанных одним Analytics ID или Adsense."],
+        ["PassiveTotal", "https://community.riskiq.com/", "Network", "Платформа RiskIQ для анализа угроз (пассивный DNS)."],
+        ["BinaryEdge", "https://www.binaryedge.io/", "Network", "Сканирование всего интернета (порты, уязвимости)."],
+        ["Dataminr", "https://www.dataminr.com/", "News", "AI-анализ событий в реальном времени (дорого, корпоративный уровень)."],
+        ["NewsNow", "https://www.newsnow.co.uk/", "News", "Агрегатор новостей (очень быстрый)."],
+        ["Google Alerts", "https://www.google.com/alerts", "News", "Мониторинг упоминаний ключевых слов в новых публикациях."],
+        ["Talkwalker Alerts", "https://www.talkwalker.com/alerts", "News", "Альтернатива Google Alerts (ищет в соцсетях и форумах)."],
+        ["GDELT Project", "https://www.gdeltproject.org/", "News", "Глобальная база данных событий (мониторинг настроений мира)."],
+        ["FlightRadar24", "https://www.flightradar24.com/", "Transport", "Самый популярный трекер самолетов в реальном времени."],
+        ["ADS-B Exchange", "https://globe.adsbexchange.com/", "Transport", "Нецензурируемый трекер полетов (видит военные и частные джеты)."],
+        ["RadarBox", "https://www.radarbox.com/", "Transport", "Альтернативный трекер авиации."],
+        ["PlaneFinder", "https://planefinder.net/", "Transport", "Еще один сервис отслеживания полетов."],
+        ["FlightAware", "https://ru.flightaware.com/", "Transport", "История полетов, трекинг рейсов (очень подробные данные)."],
+        ["LiveATC", "https://www.liveatc.net/", "Transport", "Прослушивание переговоров пилотов и диспетчеров (Air Traffic Control)."],
+        ["Airport Webcams", "https://www.airportwebcams.net/", "Transport", "База данных веб-камер в аэропортах мира."],
+        ["Aviation Safety Network", "https://aviation-safety.net/", "Transport", "База данных авиационных происшествий и катастроф."],
+        ["MarineTraffic", "https://www.marinetraffic.com/", "Transport", "Главный трекер морских судов (AIS)."],
+        ["VesselFinder", "https://www.vesselfinder.com/", "Transport", "Бесплатный трекер судов (часто обновляется быстрее MT)."],
+        ["MyShipTracking", "https://www.myshiptracking.com/", "Transport", "Трекинг судов без регистрации."],
+        ["ShipSpotting", "https://www.shipspotting.com/", "Transport", "Фотографии судов (полезно для идентификации)."],
+        ["SuperYachtFan", "https://www.superyachtfan.com/", "Transport", "База данных владельцев супер-яхт (олигархи, знаменитости)."],
+        ["Equasis", "https://www.equasis.org/", "Transport", "База данных безопасности судов (владельцы, проверки). Требует регистрации."],
+        ["OpenRailwayMap", "https://www.openrailwaymap.org/", "Transport", "Глобальная карта железнодорожных путей."],
+        ["RailRadar", "https://railradar.net/", "Transport", "Трекинг поездов (преимущественно Европа)."],
+        ["License Plate Search", "https://findbyplate.com/", "Transport", "Поиск информации по номерным знакам США."],
+        ["VinCheck.info", "https://vincheck.info/", "Transport", "Бесплатная проверка VIN кодов автомобилей."],
+        ["Google Earth Pro", "https://www.google.com/earth/versions/", "Geo", "Десктопная версия. Позволяет смотреть исторические снимки (Timeline)."],
+        ["Sentinel Hub", "https://www.sentinel-hub.com/explore/eobrowser/", "Geo", "EO Browser: Бесплатные свежие спутниковые снимки (обновление раз в 5 дней)."],
+        ["Zoom Earth", "https://zoom.earth/", "Geo", "Спутниковые снимки в почти реальном времени (погода, штормы, пожары)."],
+        ["NASA FIRMS", "https://firms.modaps.eosdis.nasa.gov/", "Geo", "Карта пожаров в реальном времени (Fire Information)."],
+        ["Wikimapia", "https://wikimapia.org/", "Geo", "Карта, размеченная пользователями (очень много военных объектов)."],
+        ["OpenStreetMap", "https://www.openstreetmap.org/", "Geo", "Подробнейшая открытая карта мира."],
+        ["Overpass Turbo", "https://overpass-turbo.eu/", "Geo", "Инструмент для сложных запросов к OpenStreetMap (найти все камеры в городе X)."],
+        ["SunCalc", "https://suncalc.org/", "Geo", "Анализ теней и положения солнца (для определения времени съемки фото)."],
+        ["DualMaps", "https://www.dualmaps.com/", "Geo", "Просмотр одной точки сразу на Google Maps, Street View и Bing Maps."],
+        ["Yandex Maps", "https://yandex.ru/maps/", "Geo", "Лучшие панорамы и карты для России и СНГ."],
+        ["Baidu Maps", "https://map.baidu.com/", "Geo", "Лучшие карты для Китая (Street View есть почти везде)."],
+        ["KakaoMap", "https://map.kakao.com/", "Geo", "Детальные карты Южной Кореи (Google Maps там плохо работает)."],
+        ["PeakFinder", "https://www.peakfinder.org/", "Geo", "Определение названий гор и возвышенностей (помогает в геолокации фото)."],
+        ["Strava Heatmap", "https://www.strava.com/heatmap", "Geo", "Тепловая карта активности бегунов (палит секретные базы и патрули)."],
+        ["SnapMap", "https://map.snapchat.com/", "Geo", "Карта сториз Snapchat (поиск событий в конкретном месте)."],
+        ["Maltego", "https://www.maltego.com/", "Visual", "Стандарт индустрии для визуализации связей (Community Edition бесплатно)."],
+        ["Miro", "https://miro.com/", "Visual", "Онлайн-доска для построения ментальных карт расследования."],
+        ["Obsidian", "https://obsidian.md/", "Visual", "Заметки с двусторонними ссылками (создает граф знаний)."],
+        ["XMind", "https://xmind.app/", "Visual", "Классический инструмент для Mind Mapping."],
+        ["Gephi", "https://gephi.org/", "Visual", "Мощный софт для визуализации огромных графов и сетей."],
+        ["Graphistry", "https://www.graphistry.com/", "Visual", "Визуализация данных для кибербезопасности (GPU accelerated)."],
+        ["Flourish", "https://flourish.studio/", "Visual", "Красивая визуализация данных для отчетов."],
+        ["Wappalyzer", "https://www.wappalyzer.com/", "Extension", "Показывает стек технологий сайта в браузере."],
+        ["Wayback Machine Ext", "https://chrome.google.com/webstore/detail/wayback-machine/", "Extension", "Быстрый доступ к архивам страницы."],
+        ["User-Agent Switcher", "https://chrome.google.com/webstore/detail/user-agent-switcher-for-c/", "Extension", "Смена устройства/браузера (притвориться айфоном)."],
+        ["SingleFile", "https://github.com/gildas-lormeau/SingleFile", "Extension", "Сохранение всей страницы в один HTML файл (для отчетов)."],
+        ["Proxy SwitchyOmega", "https://github.com/FelisCatus/SwitchyOmega", "Extension", "Удобное управление прокси в браузере."],
+        ["HackTools", "https://github.com/LasCC/Hack-Tools", "Extension", "Расширение с чит-шитами для пентеста (XSS payloads, shells)."],
+        ["Exif Viewer Pro", "https://chrome.google.com/webstore/detail/exif-viewer-pro/", "Extension", "Просмотр EXIF данных картинок прямо в браузере."],
+        ["Hunter.io Ext", "https://hunter.io/chrome", "Extension", "Поиск email адресов на текущем сайте."],
+        ["EditThisCookie", "https://www.editthiscookie.com/", "Extension", "Управление куками (импорт/экспорт сессий)."],
+        ["Tampermonkey", "https://www.tampermonkey.net/", "Extension", "Запуск пользовательских скриптов на сайтах."],
+        ["Search by Image", "https://github.com/dessant/search-by-image", "Extension", "Мульти-поиск по картинке (Google, Yandex, Bing, TinEye сразу)."],
+        ["CyberChef", "https://gchq.github.io/CyberChef/", "Tools", "Швейцарский нож для данных (Base64, Hex, XOR, JWT, etc)."],
+        ["Regex101", "https://regex101.com/", "Tools", "Отладка регулярных выражений (незаменимо для парсинга)."],
+        ["JSON Viewer", "http://jsonviewer.stack.hu/", "Tools", "Удобный просмотр JSON структур."],
+        ["Epoch Converter", "https://www.epochconverter.com/", "Tools", "Конвертация Unix Timestamp в человеческую дату."],
+        ["GPS Coordinates", "https://www.gps-coordinates.net/", "Tools", "Конвертер форматов координат (DMS to DD)."],
+        ["Unfurl", "https://dfir.blog/unfurl/", "Tools", "Визуальный анализ URL ссылок (разбор параметров)."],
+        ["Google Scholar", "https://scholar.google.com/", "Academic", "Поиск по научным статьям и патентам."],
+        ["Sci-Hub", "https://sci-hub.se/", "Academic", "Бесплатный доступ к платным научным статьям (Open Access)."],
+        ["Library Genesis", "https://libgen.is/", "Academic", "Поиск книг и статей (крупнейшая пиратская библиотека)."],
+        ["ResearchGate", "https://www.researchgate.net/", "Academic", "Социальная сеть для ученых."],
+        ["Academia.edu", "https://www.academia.edu/", "Academic", "Обмен научными работами."],
+        ["Dissernet", "https://www.dissernet.org/", "Academic", "База данных плагиата в диссертациях (РФ)."],
+        ["WorldCat", "https://www.worldcat.org/", "Academic", "Поиск книг в библиотеках по всему миру."],
+        ["CTFtime", "https://ctftime.org/", "CTF", "Расписание и рейтинги всех CTF соревнований мира."],
+        ["PicoCTF", "https://picoctf.org/", "CTF", "Идеальный старт для новичков в CTF."],
+        ["OverTheWire", "https://overthewire.org/wargames/", "CTF", "Легендарная серия Bandit для изучения Linux и безопасности."],
+        ["Root-Me", "https://www.root-me.org/", "CTF", "Сотни челленджей по веб-хакингу, криптографии и форензике."],
+        ["CryptoHack", "https://cryptohack.org/", "CTF", "Изучение современной криптографии через практику."],
+        ["VulnHub", "https://www.vulnhub.com/", "CTF", "Образы виртуальных машин для локального взлома."],
+        ["Codeby Games", "https://codeby.games/", "CTF", "Русскоязычная платформа для CTF тренировок."],
+        ["XSS Game", "https://xss-game.appspot.com/", "CTF", "Тренировка поиска XSS уязвимостей от Google."],
+        ["CNPJ Brazil", "https://solucoes.receita.fazenda.gov.br/Servicos/cnpjreva/cnpjreva_solicitacao.asp", "Business BR", "Федеральная налоговая служба Бразилии (поиск компаний)."],
+        ["TudoSobreTodos", "https://tudosobretodos.se/", "People BR", "Поиск людей в Бразилии (агрегатор данных)."],
+        ["Boletín Oficial", "https://www.boletinoficial.gob.ar/", "Govt AR", "Официальный бюллетень Аргентины."],
+        ["RUES", "https://www.rues.org.co/", "Business CO", "Единый реестр бизнеса Колумбии."],
+        ["Dateas", "https://www.dateas.com/", "Records LatAm", "Поиск публичных записей по Латинской Америке (Аргентина, Венесуэла и др)."],
+        ["Dubai TED", "https://eservices.dubaided.gov.ae/Pages/Anon/InquiryLocal.aspx", "Business UAE", "Реестр Департамента экономического развития Дубая."],
+        ["Saudi Commercial Reg", "https://mc.gov.sa/en/eservices/Pages/Commercial-data.aspx", "Business SA", "Министерство торговли Саудовской Аравии."],
+        ["Israel Corporations", "https://ica.justice.gov.il/", "Business IL", "Реестр корпораций Израиля."],
+        ["Takaya", "https://www.takaya.com/", "Business TR", "Бизнес-информация Турции."],
+        ["ACRA Singapore", "https://www.acra.gov.sg/", "Business SG", "Реестр компаний Сингапура (BizFile+)."],
+        ["DBID Philippines", "https://bnrs.dti.gov.ph/search", "Business PH", "Поиск бизнес-имен Филиппин."],
+        ["KRS Poland", "https://ekrs.ms.gov.pl/", "Business PL", "Национальный судебный реестр Польши."],
+        ["ARES Italy", "https://www.registroimprese.it/", "Business IT", "Торговый реестр Италии."],
+        ["BORME Spain", "https://www.boe.es/diario_borme/", "Business ES", "Официальный бюллетень торгового реестра Испании."],
+        ["Bolagsverket", "https://bolagsverket.se/", "Business SE", "Регистрация компаний Швеции."],
+        ["Ytj.fi", "https://www.ytj.fi/", "Business FI", "Бизнес-информационная система Финляндии."],
+        ["Earthquake Track", "https://earthquaketrack.com/", "Env", "Трекинг землетрясений в реальном времени."],
+        ["Lightning Maps", "https://www.lightningmaps.org/", "Env", "Карта ударов молний в реальном времени."],
+        ["Windy", "https://www.windy.com/", "Env", "Визуализация погодных условий (ветер, волны, давление)."],
+        ["Nullschool Earth", "https://earth.nullschool.net/", "Env", "Красивая глобальная карта ветров и течений."],
+        ["AirVisual", "https://www.iqair.com/earth", "Env", "Карта загрязнения воздуха (PM2.5) в мире."],
+        ["Internet Archive TV News", "https://archive.org/details/tv", "Media", "Поиск по субтитрам телевизионных новостей США."],
+        ["Radio Garden", "http://radio.garden/", "Media", "Прослушивание локальных радиостанций через глобус."],
+        ["Drive & Listen", "https://driveandlisten.herokuapp.com/", "Media", "Виртуальная поездка на машине по городам мира с местным радио."],
+        ["Numbeo", "https://www.numbeo.com/", "Stats", "Сравнение стоимости жизни, преступности и качества жизни в городах."],
+        ["Worldometers", "https://www.worldometers.info/", "Stats", "Статистика мира в реальном времени (население, экономика)."],
+        
+        // --- PART 8 & 9 EXPANSION (NEW TOOLS) ---
+        ["Listen Notes", "https://www.listennotes.com/", "Media", "Поисковик по подкастам (поиск по людям, темам и интервью)."],
+        ["Podchaser", "https://www.podchaser.com/", "Media", "База данных подкастов, рейтинги и профили создателей."],
+        ["Chartable", "https://chartable.com/", "Media", "Аналитика и чарты подкастов."],
+        ["Castbox", "https://castbox.fm/", "Media", "Поиск и прослушивание аудио-контента."],
+        ["Napalm FTP Indexer", "https://www.searchftps.net/", "Files", "Поисковик по открытым FTP серверам."],
+        ["Mamont", "https://www.mamont.info/", "Files", "Индексатор открытых FTP (преимущественно RU/СНГ)."],
+        ["FileChef", "https://www.filechef.com/", "Files", "Генератор Google Dorks для поиска файлов (doc, pdf, mp4)."],
+        ["PDF Drive", "https://www.pdfdrive.com/", "Files", "Поисковик бесплатных PDF книг и документов."],
+        ["SlideShare", "https://www.slideshare.net/", "Files", "Поиск презентаций (часто содержат корпоративные схемы)."],
+        ["DocPlayer", "https://docplayer.net/", "Files", "База загруженных документов и презентаций."],
+        ["MagzDB", "https://magzdb.org/", "Files", "Архив журналов и периодических изданий."],
+        ["Gleif", "https://search.gleif.org/", "Business Global", "Глобальный поиск по LEI кодам (Legal Entity Identifier)."],
+        ["OpenOwnership", "https://www.openownership.org/", "Business Global", "Реестр бенефициарных владельцев компаний."],
+        ["Dun & Bradstreet", "https://www.dnb.com/", "Business Global", "Крупнейшая база данных бизнес-информации (платная, но есть триал)."],
+        ["Kompass", "https://ru.kompass.com/", "Business Global", "Глобальный B2B справочник компаний."],
+        ["Europages", "https://www.europages.com/", "Business EU", "Каталог компаний Европы."],
+        ["Handelsregister", "https://www.handelsregister.de/", "Business DE", "Торговый реестр Германии."],
+        ["Sirene", "https://avis-situation-sirene.insee.fr/", "Business FR", "Поиск по реестру компаний Франции (SIREN/SIRET)."],
+        ["Companies Registry HK", "https://www.icris.cr.gov.hk/", "Business HK", "Реестр компаний Гонконга."],
+        ["Tijari", "https://www.tijari.ae/", "Business UAE", "Торговый портал ОАЭ."],
+        ["Zauba Corp", "https://www.zaubacorp.com/", "Business India", "Подробная информация о компаниях Индии."],
+        ["Tofler", "https://www.tofler.in/", "Business India", "Бизнес-разведка по индийским компаниям."],
+        ["Solscan", "https://solscan.io/", "Crypto", "Обозреватель блокчейна Solana."],
+        ["Cardanoscan", "https://cardanoscan.io/", "Crypto", "Обозреватель блокчейна Cardano."],
+        ["Dogechain", "https://dogechain.info/", "Crypto", "Обозреватель Dogecoin."],
+        ["XRPScan", "https://xrpscan.com/", "Crypto", "Леджер XRP (Ripple)."],
+        ["Polkascan", "https://polkascan.io/", "Crypto", "Обозреватель Polkadot."],
+        ["AlgoExplorer", "https://algoexplorer.io/", "Crypto", "Обозреватель Algorand."],
+        ["CoinGecko", "https://www.coingecko.com/", "Crypto", "Агрегатор данных о криптовалютах (рынки, ссылки)."],
+        ["CoinMarketCap", "https://coinmarketcap.com/", "Crypto", "Главный трекер цен и капитализации крипты."],
+        ["BitQuery", "https://bitquery.io/", "Crypto", "Сложные запросы к блокчейнам (GraphQL)."],
+        ["Crystal Blockchain", "https://crystalblockchain.com/", "Crypto", "Аналитика и отслеживание подозрительных транзакций."],
+        ["Ransomlook", "https://www.ransomlook.io/", "Threats", "Мониторинг сайтов группировок вымогателей (Ransomware)."],
+        ["DarkFeed", "https://darkfeed.io/", "Threats", "Лента новостей и индикаторов из даркнета."],
+        ["ThreatFox", "https://threatfox.abuse.ch/", "Threats", "База данных индикаторов компрометации (IoC)."],
+        ["Feodo Tracker", "https://feodotracker.abuse.ch/", "Threats", "Отслеживание ботнетов (Emotet, Dridex)."],
+        ["SSL Blacklist", "https://sslbl.abuse.ch/", "Threats", "Список вредоносных SSL сертификатов."],
+        ["BleepingComputer", "https://www.bleepingcomputer.com/", "News", "Главный новостной ресурс по кибербезопасности."],
+        ["KrebsOnSecurity", "https://krebsonsecurity.com/", "News", "Блог Брайана Кребса (расследования киберпреступлений)."],
+        ["VxUnderground", "https://vx-underground.org/", "Threats", "Библиотека образцов вредоносного кода и статей."],
+        ["Mastodon User Search", "https://mastodon-user-search.org/", "Social", "Поиск пользователей в Fediverse (Mastodon)."],
+        ["Tumblr Search", "https://www.tumblr.com/search/", "Social", "Поиск по блогам Tumblr (часто используется для субкультур)."],
+        ["ClubhouseDB", "https://clubhousedb.com/", "Social", "База данных пользователей Clubhouse (архив)."],
+        ["TwitchTools", "https://twitchtools.com/", "Social", "Инструменты для анализа каналов Twitch."],
+        ["Roblox User Search", "https://www.roblox.com/users/", "Gaming", "Поиск профилей Roblox."],
+        ["MyAnimeList", "https://myanimelist.net/", "Social", "Поиск профилей любителей аниме (часто ники совпадают)."],
+        ["Gravatar", "https://en.gravatar.com/", "Social", "Глобально распознаваемые аватары (связь email и фото)."],
+        ["Spur.us", "https://spur.us/", "Network", "Анализ IP на принадлежность к VPN/Proxy (бесплатный поиск ограничен)."],
+        ["IPQualityScore", "https://www.ipqualityscore.com/", "Network", "Проверка качества IP (fraud score)."],
+        ["DB-IP", "https://db-ip.com/", "Network", "Геолокация IP и база данных провайдеров."],
+        ["DNSlytics", "https://dnslytics.com/", "Network", "Инструменты для анализа DNS и IP."],
+        ["Host.io", "https://host.io/", "Domain", "Поиск доменов и связей (от создателей IPinfo)."],
+        ["NerdyData", "https://nerdydata.com/", "Code", "Поиск по исходному коду сайтов (например, 'Powered by...')."],
+        ["Insecam", "http://insecam.org/", "Cameras", "Крупнейший каталог открытых IP камер наблюдения."],
+        ["Opentopia", "http://www.opentopia.com/", "Cameras", "Каталог веб-камер мира."],
+        ["EarthCam", "https://www.earthcam.com/", "Cameras", "Высококачественные публичные веб-камеры."],
+        ["RouterPwn", "http://routerpwn.com/", "IoT", "Эксплойты для роутеров и IoT устройств (генератор)."],
+        ["PasteLert", "https://www.pastelert.com/", "Leaks", "Уведомления о появлении ключевых слов в Pastebin."],
+        ["JustPaste.it", "https://justpaste.it/", "Text", "Популярный сервис для публикации текстов."],
+        ["ControlC", "https://controlc.com/", "Text", "Аналог Pastebin."],
+        ["RaidForums (Archive)", "https://raidforums.com/", "Leaks", "Зеркала и архивы форумов утечек (искать через Google/Wayback)."],
+        ["Bing Image Match", "https://www.bing.com/images", "Images", "Иногда находит то, что не видит Google."],
+        ["Baidu Image", "https://image.baidu.com/", "Images", "Лучший поиск картинок в китайском сегменте."],
+        ["SauceNAO", "https://saucenao.com/", "Images", "Поиск первоисточника для аниме-артов и иллюстраций."],
+        ["IQDB", "https://iqdb.org/", "Images", "Мульти-движковый поиск аниме изображений."],
+        ["ImgOps", "https://imgops.com/", "Images", "Мета-инструмент для обработки изображений (открывает фото во всех поисковиках)."],
+        ["Nakarte.me", "https://nakarte.me/", "Maps", "Агрегатор туристических и топографических карт (лучшее для СНГ)."],
+        ["OldMapsOnline", "https://www.oldmapsonline.org/", "Maps", "Поиск старинных карт по выбранной локации."],
+        ["Satellites.pro", "https://satellites.pro/", "Maps", "Сравнение спутниковых снимков Apple, Google, Esri."],
+        ["LandViewer", "https://eos.com/landviewer/", "Maps", "Просмотр спутниковых снимков для анализа землепользования."],
+        ["PlaneFlightTracker", "https://www.planeflighttracker.com/", "Transport", "Трекер полетов."],
+        ["VesselTracker", "https://www.vesseltracker.com/", "Transport", "Отслеживание судов."],
+        ["FleetMon", "https://www.fleetmon.com/", "Transport", "База данных судов и портов."],
+        ["DarknetLive", "https://darknetlive.com/", "News", "Новости даркнета, аресты, закрытие маркетов."],
+        ["DarkSearch", "https://darksearch.io/", "DarkWeb", "Поисковик по даркнету."],
+        ["OnionTree", "https://oniontree.org/", "DarkWeb", "Каталог проверенных сервисов onion."],
+        ["DiffChecker", "https://www.diffchecker.com/", "Tools", "Сравнение двух текстов на различия."],
+        ["TextCompare", "https://text-compare.com/", "Tools", "Онлайн сравнение текста."],
+        ["NaturalReaders", "https://www.naturalreaders.com/", "Tools", "Озвучка текста (TTS) для анализа контента."],
+        ["JudyRecords", "https://www.judyrecords.com/", "Govt US", "Поиск по судебным делам и искам в США (бесплатно)."],
+        ["CourtListener", "https://www.courtlistener.com/", "Govt US", "База данных мнений судов и документов."],
+        ["SearchSystems", "https://publicrecords.searchsystems.net/", "Govt US", "Каталог публичных баз данных по штатам."],
+        ["PublicRecordsNow", "https://www.publicrecordsnow.com/", "Govt US", "Агрегатор публичных записей."],
+        ["BRB", "https://business.gov.nl/", "Business NL", "Бизнес-реестр Нидерландов."],
+        ["CVR", "https://datacvr.virk.dk/", "Business DK", "Центральный бизнес-реестр Дании."],
+        ["Foretaksregisteret", "https://www.brreg.no/", "Business NO", "Реестр предприятий Норвегии."],
+        ["Bolagsverket", "https://bolagsverket.se/", "Business SE", "Регистрация компаний Швеции."],
+        ["PRH", "https://www.prh.fi/", "Business FI", "Патентное и регистрационное ведомство Финляндии."],
+        ["Thatsthem", "https://thatsthem.com/", "People US", "Бесплатный поиск людей (Email, Адрес, IP)."],
+        ["Nuwber", "https://nuwber.com/", "People US", "Поиск людей по имени, телефону, адресу."],
+        ["MailBuster", "https://mailbuster.io/", "Email", "Проверка существования почты."],
+        ["NameCheckr", "https://www.namecheckr.com/", "Username", "Проверка доступности имени и домена."],
+        ["Lullar", "https://com.lullar.com/", "People", "Поиск профилей по email и имени."],
+        ["UserSearch.org", "https://usersearch.org/", "Username", "Поиск по никам и emails на форумах."],
+        ["Metadata2Go", "https://www.metadata2go.com/", "Metadata", "Онлайн просмотрщик метаданных любых файлов."],
+        ["Jimpl", "https://jimpl.com/", "Images", "Анализатор метаданных изображений (удаляет EXIF)."],
+        ["BrandFolder", "https://brandfolder.com/workbench/extract-metadata", "Metadata", "Извлечение метаданных."],
+        ["OFAC Sanctions", "https://sanctionssearch.ofac.treas.gov/", "Business Global", "Список санкций США (SDN List)."],
+        ["EU Sanctions Map", "https://www.sanctionsmap.eu/", "Business EU", "Визуализация санкций Евросоюза."],
+        ["UK Sanctions List", "https://www.gov.uk/government/publications/the-uk-sanctions-list", "Business UK", "Список санкций Великобритании."],
+        ["RuPEP", "https://rupep.org/", "Business RU", "База данных публичных должностных лиц России и СНГ."],
+        ["Base", "https://www.base-search.net/", "Academic", "Bielefeld Academic Search Engine (научные ресурсы)."],
+        ["Core", "https://core.ac.uk/", "Academic", "Крупнейшая коллекция открытых исследовательских статей."],
+        ["Dimensions", "https://app.dimensions.ai/", "Academic", "База данных грантов, публикаций и патентов."],
+        ["Civitai", "https://civitai.com/", "AI Tools", "Поиск моделей для генерации изображений (Stable Diffusion)."],
+        ["ThereIsAnAIForThat", "https://thereasanaiforthat.com/", "AI Tools", "Огромный каталог AI инструментов под любые задачи."],
+        ["FutureTools", "https://www.futuretools.io/", "AI Tools", "Коллекция лучших AI сервисов."],
+        ["Midjourney", "https://www.midjourney.com/", "AI Tools", "Генератор изображений (нужен Discord)."],
+        ["Krugle", "https://www.krugle.com/", "Code", "Поисковик по коду и техническим файлам."],
+        ["SearchCode", "https://searchcode.com/", "Code", "Поиск по миллиардам строк кода из открытых репозиториев."],
+        ["Libraries.io", "https://libraries.io/", "Code", "Поиск open source библиотек и зависимостей."],
+        ["Snyk Vulnerability DB", "https://security.snyk.io/", "DevSec", "База уязвимостей в open source библиотеках."],
+        ["Archive.today", "https://archive.ph/", "Archives", "Зеркало для сохранения веб-страниц."],
+        ["SimilarWeb", "https://www.similarweb.com/", "Analytics", "Анализ трафика веб-сайтов."],
+        ["SEMrush", "https://www.semrush.com/", "Analytics", "Маркетинговая аналитика (платно, но мощно)."],
+        ["Ahrefs", "https://ahrefs.com/backlink-checker", "Analytics", "Проверка обратных ссылок (бесплатная версия)."],
+        ["Moz Link Explorer", "https://moz.com/link-explorer", "Analytics", "Анализ ссылочной массы домена."],
+        ["Netlas", "https://netlas.io/", "Infrastructure", "Сканер интернета."],
+        ["FullContact", "https://www.fullcontact.com/", "People", "Обогащение данных о контактах (API)."],
+        ["Clearbit Connect", "https://clearbit.com/", "Email", "Поиск корпоративных email (плагин)."],
+        ["Dropmail", "https://dropmail.me/", "Privacy", "Временная почта (умная переадресация)."],
+        ["Guerrilla Mail", "https://www.guerrillamail.com/", "Privacy", "Классическая временная почта."],
+        ["Yopmail", "http://www.yopmail.com/", "Privacy", "Публичные временные ящики."],
+        
+        // --- NEW ADDITIONS FOR PART 9 (HARDWARE & DEV) ---
+        ["Flipper Zero", "https://flipperzero.one/", "Hardware", "Мультитул для пентестеров и гиков."],
+        ["Proxmark3", "https://github.com/RfidResearchGroup/proxmark3", "Hardware", "Инструмент для анализа и клонирования RFID/NFC."],
+        ["Hak5 Pineapple", "https://shop.hak5.org/products/wifi-pineapple", "Hardware", "Устройство для аудита Wi-Fi сетей."],
+        ["Ubertooth One", "https://greatscottgadgets.com/ubertoothone/", "Hardware", "Платформа для разработки и анализа Bluetooth."],
+        ["Digispark", "http://digistump.com/products/1", "Hardware", "Дешевая плата разработки (BadUSB)."],
+        ["Rubber Ducky", "https://shop.hak5.org/products/usb-rubber-ducky", "Hardware", "Классическая BadUSB флешка для инъекции нажатий клавиш."],
+        ["O.MG Cable", "https://o.mg.lol/", "Hardware", "Кабель со встроенным имплантом Wi-Fi."],
+        ["Postman", "https://www.postman.com/", "Dev Tools", "Платформа для тестирования API."],
+        ["Swagger Editor", "https://editor.swagger.io/", "Dev Tools", "Редактор спецификаций API."],
+        ["StackOverflow", "https://stackoverflow.com/", "Dev Tools", "Крупнейшее сообщество разработчиков."],
+        ["GitHub", "https://github.com/", "Code", "Крупнейший хостинг кода."],
+        ["GitLab", "https://gitlab.com/", "Code", "Альтернатива GitHub, популярна для приватных репозиториев."],
+        ["Bitbucket", "https://bitbucket.org/", "Code", "Хостинг кода от Atlassian."],
+        ["SourceForge", "https://sourceforge.net/", "Code", "Архив open-source программного обеспечения."],
+        ["IDA Pro", "https://hex-rays.com/ida-pro/", "Reverse Eng", "Интерактивный дизассемблер (стандарт индустрии)."],
+        ["Ghidra", "https://ghidra-sre.org/", "Reverse Eng", "Бесплатный фреймворк для реверс-инжиниринга от АНБ."],
+        ["Radare2", "https://rada.re/n/", "Reverse Eng", "Консольный фреймворк для реверса (Open Source)."],
+        ["OllyDbg", "http://www.ollydbg.de/", "Reverse Eng", "Классический отладчик для Windows."],
+        ["x64dbg", "https://x64dbg.com/", "Reverse Eng", "Современный отладчик для Windows (x64/x32)."],
+        ["Cuteradio", "https://cuteradio.org/", "Media", "Тысячи радиостанций со всего мира."],
+        ["Filmne", "https://filmne.com/", "Media", "Поиск мест съемок фильмов."],
+        ["Yandex Maps Panoramas", "https://yandex.com/maps/", "Maps", "Панорамы улиц (Street View) в СНГ."],
+        ["Google Trends", "https://trends.google.com/", "Analytics", "Анализ популярности поисковых запросов."],
+        ["Social Searcher", "https://www.social-searcher.com/", "Social", "Поиск упоминаний в социальных сетях в реальном времени."]
+    ];
+
+    // --- APP LOGIC ---
+    const grid = document.getElementById('toolsGrid');
+    const searchInput = document.getElementById('searchInput');
+    const categorySelect = document.getElementById('categorySelect');
+    const toolCountElement = document.getElementById('toolCount');
+
+    // Init Logic
+    function init() {
+        // Sort data alphabetically
+        rawData.sort((a, b) => a[0].localeCompare(b[0]));
+
+        // Populate Categories
+        const categories = [...new Set(rawData.map(tool => tool[2]))].sort();
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = `> ${cat.toUpperCase()}`;
+            categorySelect.appendChild(option);
+        });
+
+        // Initial Render
+        renderTools(rawData);
+    }
+
+    // Render Function
+    function renderTools(data) {
+        grid.innerHTML = '';
+        toolCountElement.textContent = data.length;
+
+        data.forEach(item => {
+            const [name, url, category, desc] = item;
+            
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div>
+                    <div class="card-cat">${category}</div>
+                    <h3>${name}</h3>
+                    <p>${desc}</p>
+                </div>
+                <a href="${url}" target="_blank" class="btn">[ OPEN LINK ]</a>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    // Filter Logic
+    function filterData() {
+        const term = searchInput.value.toLowerCase();
+        const cat = categorySelect.value;
+
+        const filtered = rawData.filter(item => {
+            const [name, url, category, desc] = item;
+            const matchesSearch = name.toLowerCase().includes(term) || desc.toLowerCase().includes(term) || category.toLowerCase().includes(term);
+            const matchesCategory = cat === 'All' || category === cat;
+            return matchesSearch && matchesCategory;
+        });
+
+        renderTools(filtered);
+    }
+
+    // Events
+    searchInput.addEventListener('input', filterData);
+    categorySelect.addEventListener('change', filterData);
+
+    // Run
+    init();
+
+</script>
+</body>
+</html>
